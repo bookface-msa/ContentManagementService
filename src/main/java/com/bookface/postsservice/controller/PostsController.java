@@ -22,7 +22,7 @@ public class PostsController {
         try {
             postsService.createPost(postRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body("Post created successfully.");
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
@@ -37,11 +37,17 @@ public class PostsController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity getPostById(@PathVariable String id) {
         try {
-             PostsResponse postsResponse = postsService.getPostById(id);
+            PostsResponse postsResponse = postsService.getPostById(id);
             return ResponseEntity.status(HttpStatus.OK).body(postsResponse);
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such post exists.");
         }
+    }
+
+    @PostMapping("/clap/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void clap(@PathVariable String id) {
+        postsService.clap(id);
     }
 
 

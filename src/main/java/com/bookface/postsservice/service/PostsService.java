@@ -46,20 +46,33 @@ public class PostsService {
         return posts.stream().map(this::mapToPostResponse).toList();
     }
 
+    public PostsResponse getPostById(String id) {
+        Optional<Post> post = postsRepository.findById(id);
+        return post.map(this::mapToPostResponse).get();
+    }
+
+    public void clap(String id){
+        Post post = postsRepository.findById(id).get();
+        System.out.println(post.getId());
+        if(post!=null) {
+            System.out.println(post.getClaps());
+            post.setClaps(post.getClaps() + 1);
+            System.out.println(post.getClaps());
+            postsRepository.save(post);
+        }
+    }
+
     private PostsResponse mapToPostResponse(Post post) {
         return PostsResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .subTitle(post.getSubTitle())
                 .body(post.getBody())
+                .claps(post.getClaps())
+                .photoURL(post.getPhotoURL())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
-    }
-
-    public PostsResponse getPostById(String id) {
-        Optional<Post> post = postsRepository.findById(id);
-        return post.map(this::mapToPostResponse).get();
     }
 
 

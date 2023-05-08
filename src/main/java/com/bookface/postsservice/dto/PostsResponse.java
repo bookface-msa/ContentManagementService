@@ -18,6 +18,8 @@ public class PostsResponse {
     private String title;
     private String subTitle;
     private String body;
+    private String photoURL;
+    private int claps;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
