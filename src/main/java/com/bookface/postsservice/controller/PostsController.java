@@ -43,11 +43,24 @@ public class PostsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such post exists.");
         }
     }
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity updatePost(@PathVariable String id, @RequestBody PostUpdateRequest updatePostBody) {
+        postsService.updatePost(id,updatePostBody.title, updatePostBody.body);
+        return ResponseEntity.status(HttpStatus.OK).body("Post Updated Successfully");
+    }
 
     @PostMapping("/clap/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void clap(@PathVariable String id) {
         postsService.clap(id);
+    }
+
+
+
+    static public class PostUpdateRequest {
+        public String title;
+        public String body;
     }
 
 

@@ -18,6 +18,7 @@ public class PostsService {
 
     private final PostsRepository postsRepository;
 
+
     public void createPost(PostsRequest postsRequest) throws Exception{
         if(postsRequest.getTitle() == null || postsRequest.getTitle().length() == 0){
             throw new Exception("Post is missing a Title");
@@ -51,13 +52,26 @@ public class PostsService {
         return post.map(this::mapToPostResponse).get();
     }
 
+    public void updatePost(String id, String newTitle, String newBody){
+        Post post = postsRepository.findById(id).orElse(null);
+        //TODO: Check if the current session userId matches the posts authorID
+        if(post!=null) {
+            if(newTitle!=null && newTitle.length() !=0) {
+                post.setTitle(newTitle);
+            }
+            if(newBody!=null && newBody.length() !=0) {
+                post.setBody(newBody);
+            }
+            post.setUpdatedAt(java.time.LocalDateTime.now());
+            postsRepository.save(post);
+        }
+    }
+
     public void clap(String id){
-        Post post = postsRepository.findById(id).get();
+        Post post = postsRepository.findById(id).orElse(null);
         System.out.println(post.getId());
         if(post!=null) {
-            System.out.println(post.getClaps());
             post.setClaps(post.getClaps() + 1);
-            System.out.println(post.getClaps());
             postsRepository.save(post);
         }
     }
