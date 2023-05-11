@@ -18,6 +18,8 @@ target/
 *.iws
 *.iml
 *.ipr
+firebase.json
+application.properties
 
 ### NetBeans ###
 /nbproject/private/

@@ -58,7 +58,6 @@ class PostsServiceApplicationTests {
     private PostsRequest getPostRequest() {
         return PostsRequest.builder()
                 .title("Test Post")
-                .subTitle("Subtitle Test Post")
                 .body("This is a test Post")
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
