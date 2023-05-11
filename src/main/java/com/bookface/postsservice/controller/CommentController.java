@@ -23,15 +23,32 @@ public class CommentController {
     private final CommentsService commentsService;
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createComment(@RequestBody CommentRequest commentRequest){
-        commentsService.createComment(commentRequest);
+    public ResponseEntity<String> createComment(@RequestBody CommentRequest commentRequest) throws Exception{
+        try {
+            commentsService.createComment(commentRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body("comment created successfully.");}
+        catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
 
-}
-@GetMapping
+    }
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<CommentResponse> getAllComments(){
-    return null;
-}
+        return commentsService.getALLComments();
+    }
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity getCommentById(@PathVariable String id){
+        try{
+            CommentResponse commentResponse= commentsService.getCommentById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(commentResponse);
+        }
+        catch (Exception e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No comment with this ID exists.");
+        }
+
+    }
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity updateComment(@PathVariable String id, @RequestBody CommentRequest updateCommentContent) {
