@@ -2,11 +2,14 @@ package com.bookface.postsservice.service;
 
 import com.bookface.postsservice.dto.PostsRequest;
 import com.bookface.postsservice.dto.PostsResponse;
+import com.bookface.postsservice.firebase.FirebaseInterface;
 import com.bookface.postsservice.model.Post;
 import com.bookface.postsservice.repository.PostsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +20,9 @@ import java.util.Optional;
 public class PostsService {
 
     private final PostsRepository postsRepository;
+
+    @Autowired
+    private final FirebaseInterface IFirebase;
 
 
     public void createPost(PostsRequest postsRequest) throws Exception{
@@ -37,6 +43,20 @@ public class PostsService {
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
                 .build();
+
+        //Save image to firebase and save image url.
+        try {
+            MultipartFile file = postsRequest.getFile();
+            if(file != null) {
+                String fileName = IFirebase.save(file);
+                String imageUrl = IFirebase.getImageUrl(fileName);
+                post.setPhotoURL(imageUrl);
+                System.out.println(imageUrl);
+            }
+
+        } catch (Exception e) {
+            throw new Exception("Failed to upload Image");
+        }
 
         postsRepository.insert(post);
         log.info("Post {} Saved", post.getId());
@@ -89,9 +109,5 @@ public class PostsService {
                 .build();
     }
 
-
-//    public Post getPostById(Long id) {
-////        Optional<Post> postOptional = postsRepository.findById(id);
-//    }
 
 }
