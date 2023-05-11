@@ -11,6 +11,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.MalformedURLException;
 import java.util.List;
 
 @RestController
@@ -58,9 +59,12 @@ public class PostsController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity deletePost(@PathVariable String id) {
-        postsService.deletePost(id);
-        //TODO: Delete associated image from firebase.
-        return ResponseEntity.status(HttpStatus.OK).body("Post Deleted Successfully");
+        try {
+            postsService.deletePost(id);
+            return ResponseEntity.status(HttpStatus.OK).body("Post Deleted Successfully");
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Post doesn't exist or failed to delete post");
+        }
     }
 
     @PostMapping("/clap/{id}")

@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class PostsService {
 
+    @Autowired
     private final PostsRepository postsRepository;
 
     @Autowired
@@ -51,7 +55,6 @@ public class PostsService {
                 String fileName = IFirebase.save(file);
                 String imageUrl = IFirebase.getImageUrl(fileName);
                 post.setPhotoURL(imageUrl);
-                System.out.println(imageUrl);
             }
 
         } catch (Exception e) {
@@ -88,10 +91,22 @@ public class PostsService {
         }
     }
 
-    public void deletePost(String id) {
+    public void deletePost(String id) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
-        if(post != null) {
+        if (post != null) {
+            String imageUrl = post.getPhotoURL();
+            if (imageUrl != null) {
+                try {
+                    String path = new URL(imageUrl).getPath();
+                    String fileName = path.substring(path.lastIndexOf('/') + 1);
+                    IFirebase.delete(fileName);
+                }catch(Exception e){
+                    log.info(e.getMessage());
+                }
+            }
             postsRepository.deleteById(id);
+        }else{
+            throw new Exception();
         }
     }
 

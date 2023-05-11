@@ -40,7 +40,7 @@ public class FirebaseService implements FirebaseInterface {
 
         try {
 
-            if (FirebaseApp.getInstance() == null) {
+            if (FirebaseApp.getApps().size() == 0 ) {
                 ClassPathResource serviceAccount = new ClassPathResource("firebase.json");
 
                 FirebaseOptions options = new FirebaseOptions.Builder()
