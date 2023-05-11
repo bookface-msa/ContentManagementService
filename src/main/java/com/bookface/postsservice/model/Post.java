@@ -26,6 +26,7 @@ public class Post {
     private String body;
     private String photoURL;
     private int claps;
+    private int commentCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

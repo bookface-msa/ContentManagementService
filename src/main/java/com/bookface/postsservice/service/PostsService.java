@@ -25,21 +25,22 @@ public class PostsService {
     private final FirebaseInterface IFirebase;
 
 
-    public void createPost(PostsRequest postsRequest) throws Exception{
-        if(postsRequest.getTitle() == null || postsRequest.getTitle().length() == 0){
+    public void createPost(PostsRequest postsRequest) throws Exception {
+        if (postsRequest.getTitle() == null || postsRequest.getTitle().length() == 0) {
             throw new Exception("Post is missing a Title");
         }
-        if(postsRequest.getBody() == null || postsRequest.getBody().length() == 0){
+        if (postsRequest.getBody() == null || postsRequest.getBody().length() == 0) {
             throw new Exception("Post cannot be empty");
         }
 
-        //TODO: get authorID from token or mq? and save image to mediaserver to put photoURL.
+        //TODO: get authorID from token or mq?
 
         Post post = Post.builder()
                 .title(postsRequest.getTitle())
                 .subTitle(postsRequest.getSubTitle())
                 .body(postsRequest.getBody())
                 .claps(0)
+                .commentCount(0)
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
                 .build();
@@ -47,7 +48,7 @@ public class PostsService {
         //Save image to firebase and save image url.
         try {
             MultipartFile file = postsRequest.getFile();
-            if(file != null) {
+            if (file != null) {
                 String fileName = IFirebase.save(file);
                 String imageUrl = IFirebase.getImageUrl(fileName);
                 post.setPhotoURL(imageUrl);
@@ -61,7 +62,8 @@ public class PostsService {
         postsRepository.insert(post);
         log.info("Post {} Saved", post.getId());
     }
-    public List<PostsResponse> getAllPosts(){
+
+    public List<PostsResponse> getAllPosts() {
         List<Post> posts = postsRepository.findAll();
 
         return posts.stream().map(this::mapToPostResponse).toList();
@@ -72,14 +74,14 @@ public class PostsService {
         return post.map(this::mapToPostResponse).get();
     }
 
-    public void updatePost(String id, String newTitle, String newBody){
+    public void updatePost(String id, String newTitle, String newBody) {
         Post post = postsRepository.findById(id).orElse(null);
         //TODO: Check if the current session userId matches the posts authorID
-        if(post!=null) {
-            if(newTitle!=null && newTitle.length() !=0) {
+        if (post != null) {
+            if (newTitle != null && newTitle.length() != 0) {
                 post.setTitle(newTitle);
             }
-            if(newBody!=null && newBody.length() !=0) {
+            if (newBody != null && newBody.length() != 0) {
                 post.setBody(newBody);
             }
             post.setUpdatedAt(java.time.LocalDateTime.now());
@@ -87,12 +89,30 @@ public class PostsService {
         }
     }
 
-    public void clap(String id){
+    public void clap(String id) {
         Post post = postsRepository.findById(id).orElse(null);
-        System.out.println(post.getId());
-        if(post!=null) {
+        if (post != null) {
             post.setClaps(post.getClaps() + 1);
             postsRepository.save(post);
+        }
+    }
+
+    public void incrementComments(String id) {
+        Post post = postsRepository.findById(id).orElse(null);
+        if (post != null) {
+            post.setCommentCount(post.getCommentCount() + 1);
+            postsRepository.save(post);
+        }
+    }
+
+    public void decrementComments(String id) {
+        Post post = postsRepository.findById(id).orElse(null);
+        if (post != null) {
+            int commentCount = post.getCommentCount();
+            if (commentCount > 0) {
+                post.setCommentCount(post.getCommentCount() - 1);
+                postsRepository.save(post);
+            }
         }
     }
 
@@ -103,6 +123,7 @@ public class PostsService {
                 .subTitle(post.getSubTitle())
                 .body(post.getBody())
                 .claps(post.getClaps())
+                .commentsCount(post.getCommentCount())
                 .photoURL(post.getPhotoURL())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())

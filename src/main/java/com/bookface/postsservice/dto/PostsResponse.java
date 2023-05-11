@@ -20,6 +20,7 @@ public class PostsResponse {
     private String body;
     private String photoURL;
     private int claps;
+    private int commentsCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

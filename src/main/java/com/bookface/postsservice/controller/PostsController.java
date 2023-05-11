@@ -24,7 +24,6 @@ public class PostsController {
     @PostMapping
     public ResponseEntity<String> createPost(@ModelAttribute PostsRequest postRequest) throws Exception {
         try {
-            System.out.println("bouta create file");
             postsService.createPost(postRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body("Post created successfully.");
         } catch (Exception e) {
@@ -62,12 +61,17 @@ public class PostsController {
         postsService.clap(id);
     }
 
-//    @PostMapping("/profile/pic")
-//    public Object upload(@RequestParam("file") MultipartFile multipartFile) {
-//        log.info("HIT -/upload | File Name : {}", multipartFile.getOriginalFilename());
-//        return fileService.upload(multipartFile);
-//    }
+    @PostMapping("/commentInc/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void commentInc(@PathVariable String id) {
+        postsService.incrementComments(id);
+    }
 
+    @PostMapping("/commentDec/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void commentDec(@PathVariable String id) {
+        postsService.decrementComments(id);
+    }
 
     static public class PostUpdateRequest {
         public String title;
