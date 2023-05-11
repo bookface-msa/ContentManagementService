@@ -88,6 +88,13 @@ public class PostsService {
         }
     }
 
+    public void deletePost(String id) {
+        Post post = postsRepository.findById(id).orElse(null);
+        if(post != null) {
+            postsRepository.deleteById(id);
+        }
+    }
+
     public void clap(String id) {
         Post post = postsRepository.findById(id).orElse(null);
         if (post != null) {

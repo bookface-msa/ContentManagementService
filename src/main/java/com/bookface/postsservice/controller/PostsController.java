@@ -55,6 +55,14 @@ public class PostsController {
         return ResponseEntity.status(HttpStatus.OK).body("Post Updated Successfully");
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity deletePost(@PathVariable String id) {
+        postsService.deletePost(id);
+        //TODO: Delete associated image from firebase.
+        return ResponseEntity.status(HttpStatus.OK).body("Post Deleted Successfully");
+    }
+
     @PostMapping("/clap/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void clap(@PathVariable String id) {
