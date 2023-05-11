@@ -22,44 +22,10 @@ public class Post {
     private String id;
     private String author_id;
     private String title;
-    private String subTitle;
     private String body;
     private String photoURL;
     private int claps;
     private int commentCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-
-//    public Post(String id, String title, String subTitle, Date createdAt,Date updatedAt, String body){
-//        this.id = id;
-//        this.title = title;
-//        this.subTitle = subTitle;
-//        this.body = body;
-//        this.createdAt = createdAt;
-//        this.updatedAt = updatedAt;
-//    }
-//    public String getId() {
-//        return id;
-//    }
-
-//    public String getTitle() {
-//        return title;
-//    }
-//
-//    public String getSubTitle() {
-//        return subTitle;
-//    }
-//
-//    public LocalDateTime getCreationDate() {
-//        return createdAt;
-//    }
-//    public LocalDateTime getUpdateDate() {
-//        return updatedAt;
-//    }
-//
-//    public String getBody() {
-//        return body;
-//    }
-
 }

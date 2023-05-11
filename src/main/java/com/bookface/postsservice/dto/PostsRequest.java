@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 public class PostsRequest {
     private String author_id;
     private String title;
-    private String subTitle;
     private String body;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

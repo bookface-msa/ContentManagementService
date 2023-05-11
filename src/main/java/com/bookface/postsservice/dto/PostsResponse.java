@@ -16,7 +16,6 @@ public class PostsResponse {
     private String id;
     private String author_id;
     private String title;
-    private String subTitle;
     private String body;
     private String photoURL;
     private int claps;

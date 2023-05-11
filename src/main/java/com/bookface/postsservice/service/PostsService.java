@@ -37,7 +37,6 @@ public class PostsService {
 
         Post post = Post.builder()
                 .title(postsRequest.getTitle())
-                .subTitle(postsRequest.getSubTitle())
                 .body(postsRequest.getBody())
                 .claps(0)
                 .commentCount(0)
@@ -120,7 +119,6 @@ public class PostsService {
         return PostsResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
-                .subTitle(post.getSubTitle())
                 .body(post.getBody())
                 .claps(post.getClaps())
                 .commentsCount(post.getCommentCount())
