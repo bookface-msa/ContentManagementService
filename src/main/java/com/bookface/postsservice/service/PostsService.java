@@ -8,6 +8,8 @@ import com.bookface.postsservice.repository.PostsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -65,13 +67,16 @@ public class PostsService {
         log.info("Post {} Saved", post.getId());
     }
 
+
     public List<PostsResponse> getAllPosts() {
         List<Post> posts = postsRepository.findAll();
 
         return posts.stream().map(this::mapToPostResponse).toList();
     }
 
+    @Cacheable(value = "postCache", key = "#id")
     public PostsResponse getPostById(String id) {
+        System.out.println("Geting");
         Optional<Post> post = postsRepository.findById(id);
         return post.map(this::mapToPostResponse).get();
     }
@@ -91,6 +96,7 @@ public class PostsService {
         }
     }
 
+    @CacheEvict(value = "postCache", key = "#id")
     public void deletePost(String id) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
         if (post != null) {

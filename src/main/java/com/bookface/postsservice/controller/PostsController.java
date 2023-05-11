@@ -45,6 +45,7 @@ public class PostsController {
             PostsResponse postsResponse = postsService.getPostById(id);
             return ResponseEntity.status(HttpStatus.OK).body(postsResponse);
         } catch (Exception e) {
+            System.out.println(e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such post exists.");
         }
     }
