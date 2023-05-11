@@ -26,4 +26,41 @@ public class CommentsService {
         log.info("comment{}is saved",comment.getId());
 
     }
-}
+    public void updateComment(String id, String newContent) {
+        Comment comment = commentsRepository.findById(id).orElse(null);
+
+        if (comment != null) {
+            if (newContent != null && newContent.length() != 0) {
+                comment.setContent(newContent);
+            }
+
+            comment.setUpdatedAt(java.time.LocalDateTime.now());
+            commentsRepository.save(comment);
+        }
+    }
+        public void deleteComment(String id, String post_id) {
+            Comment comment = commentsRepository.findById(id).orElse(null);
+            if(comment != null) {
+                commentsRepository.deleteById(id);
+            }
+        }
+    public void incrementLikes(String id) {
+        Comment comment = commentsRepository.findById(id).orElse(null);
+        if (comment!= null) {
+            comment.setNumb_likes(comment.getNumb_likes() + 1);
+            commentsRepository.save(comment);
+        }
+    }
+
+    public void decrementLikes(String id) {
+         Comment comment= commentsRepository.findById(id).orElse(null);
+        if (comment != null) {
+            int LikesCount = comment.getNumb_likes();
+            if (LikesCount > 0) {
+                comment.setNumb_likes(comment.getNumb_likes() - 1);
+                commentsRepository.save(comment);
+            }
+        }
+    }
+    }
+
