@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class CommentResponse {
     private String id;
-    private String post_id;
+    private String postid;
     private String author;
     private String content;
     private int numb_likes;

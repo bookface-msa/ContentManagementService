@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CommentRequest {
-    private String post_id;
+    private String postid;
     private String author;
     private String content;
     private int numb_likes;

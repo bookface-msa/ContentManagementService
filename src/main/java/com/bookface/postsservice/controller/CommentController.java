@@ -16,7 +16,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/post/{postId}/comment")
+@RequestMapping("/api/comment/{postId}")
 @RequiredArgsConstructor
 @Slf4j
 public class CommentController {
@@ -37,6 +37,7 @@ public class CommentController {
     @ResponseStatus(HttpStatus.OK)
     public List<CommentResponse> getAllComments(@PathVariable("postId") String postId){
         return commentsService.getALLComments(postId);
+
     }
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -58,20 +59,22 @@ public class CommentController {
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity deleteComment(@PathVariable String id, @PathVariable String post_id) {
-        commentsService.deleteComment(id,post_id);
+    public ResponseEntity deleteComment(@PathVariable String id) {
+        commentsService.deleteComment(id);
         return ResponseEntity.status(HttpStatus.OK).body("Comment Deleted Successfully");
     }
     @PostMapping("/LikesInc/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public void commentInc(@PathVariable String id) {
+    public ResponseEntity<String> commentInc(@PathVariable String id) {
         commentsService.incrementLikes(id);
+        return ResponseEntity.status(HttpStatus.OK).body("Likes incremented");
     }
 
-    @PostMapping("/commentDec/{id}")
+    @PostMapping("/LikesDec/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public void commentDec(@PathVariable String id) {
+    public ResponseEntity<String> commentDec(@PathVariable String id) {
         commentsService.decrementLikes(id);
+        return ResponseEntity.status(HttpStatus.OK).body("Likes decremented");
     }
 
 

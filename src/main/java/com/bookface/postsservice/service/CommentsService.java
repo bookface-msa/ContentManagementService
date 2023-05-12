@@ -13,14 +13,11 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Criteria;
+
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +38,7 @@ public class CommentsService {
         }
 
         Comment comment=Comment.builder()
-                .post_id(postId)
+                .postid(postId)
                 .author(commentRequest.getAuthor())
                 .content(commentRequest.getContent())
                 .numb_likes(0)
@@ -53,15 +50,29 @@ public class CommentsService {
     }
     public List<CommentResponse> getALLComments(String postId) {
         List<Comment> comments=getAllCommentsByPostId(postId);
-       return comments.stream().map(this::mapToCommentResponse).toList();
+        System.out.println(comments);
+
+      return comments.stream().map(this::mapToCommentResponse).toList();
        // return commentsRepository.findByPostId(postId);
 
     }
     @Autowired
     private MongoTemplate mongoTemplate;
     public List<Comment> getAllCommentsByPostId(String postId){
-        Query query=new Query(Criteria.where("post_Id").is(postId));
-        return mongoTemplate.find(query, Comment.class);
+
+//        Query query=new Query(Criteria.where("post_id").is(postId));
+//       List<Comment> comments =  mongoTemplate.find(query, Comment.class);
+       // List<Comment> comments = commentsRepository.findBy()
+//
+//        List<Comment> comments = mongoTemplate.find(
+//                Query.query(Criteria.where("post_id").is(postId)),
+//                Comment.class
+//        );
+
+        return commentsRepository.findBypostid(postId);
+       // System.out.println(comments);
+
+       // return comments;
     }
     /*
     public List<Comment> getAllCommentsOfPost(String postId){
@@ -91,15 +102,15 @@ public class CommentsService {
             commentsRepository.save(comment);
         }
     }
-        public void deleteComment(String id, String post_id) {
+        public void deleteComment(String id) {
             Comment comment = commentsRepository.findById(id).orElse(null);
             if(comment != null) {
                 commentsRepository.deleteById(id);
+
             }
         }
         public void deleteAllCommentsByPostId(String postId){
-            Query query=new Query(Criteria.where("post_Id").is(postId));
-            mongoTemplate.findAllAndRemove(query, Comment.class);
+           commentsRepository.deleteBypostid(postId);
             /*
            for(int i=0;i<commentsToDelete.size();i++){
                commentsRepository.deleteById(commentsToDelete.get(i).getId());
@@ -129,7 +140,7 @@ public class CommentsService {
     private CommentResponse mapToCommentResponse(Comment comment) {
         return CommentResponse.builder()
                 .id(comment.getId())
-                .post_id(comment.getPost_id())
+                .postid(comment.getPostid())
                 .author(comment.getAuthor())
                 .content(comment.getContent())
                 .numb_likes(comment.getNumb_likes())
