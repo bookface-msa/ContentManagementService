@@ -50,7 +50,7 @@ public class CommentsService {
         log.info("comment{}is saved",comment.getId());
 
     }
-    @Cacheable(value = "commentCache", key = "#id")
+    @Cacheable(value = "commentCache")
     public List<CommentResponse> getALLComments(String postId) {
         List<Comment> comments=getAllCommentsByPostId(postId);
         System.out.println(comments);
