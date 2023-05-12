@@ -76,11 +76,11 @@ public class PostsService {
 
     @Cacheable(value = "postCache", key = "#id")
     public PostsResponse getPostById(String id) {
-        System.out.println("Geting");
         Optional<Post> post = postsRepository.findById(id);
         return post.map(this::mapToPostResponse).get();
     }
 
+    @CacheEvict(value = "postCache", key = "#id")
     public void updatePost(String id, String newTitle, String newBody) {
         Post post = postsRepository.findById(id).orElse(null);
         //TODO: Check if the current session userId matches the posts authorID

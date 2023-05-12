@@ -74,18 +74,6 @@ public class PostsController {
         postsService.clap(id);
     }
 
-    @PostMapping("/commentInc/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void commentInc(@PathVariable String id) {
-        postsService.incrementComments(id);
-    }
-
-    @PostMapping("/commentDec/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void commentDec(@PathVariable String id) {
-        postsService.decrementComments(id);
-    }
-
     static public class PostUpdateRequest {
         public String title;
         public String body;
