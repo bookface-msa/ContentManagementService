@@ -16,16 +16,17 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/comment")
+@RequestMapping("/api/post/{postId}/comment")
 @RequiredArgsConstructor
 @Slf4j
 public class CommentController {
+
     private final CommentsService commentsService;
-    @PostMapping
+    @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<String> createComment(@RequestBody CommentRequest commentRequest) throws Exception{
+    public ResponseEntity<String> createComment(@RequestBody CommentRequest commentRequest,@PathVariable("postId") String postId) throws Exception{
         try {
-            commentsService.createComment(commentRequest);
+            commentsService.createComment(commentRequest,postId);
             return ResponseEntity.status(HttpStatus.CREATED).body("comment created successfully.");}
         catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -34,8 +35,8 @@ public class CommentController {
     }
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<CommentResponse> getAllComments(){
-        return commentsService.getALLComments();
+    public List<CommentResponse> getAllComments(@PathVariable("postId") String postId){
+        return commentsService.getALLComments(postId);
     }
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
