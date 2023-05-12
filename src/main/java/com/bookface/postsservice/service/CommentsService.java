@@ -9,6 +9,8 @@ import com.bookface.postsservice.repository.PostsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,7 @@ public class CommentsService {
         log.info("comment{}is saved",comment.getId());
 
     }
+    @Cacheable(value = "commentCache", key = "#id")
     public List<CommentResponse> getALLComments(String postId) {
         List<Comment> comments=getAllCommentsByPostId(postId);
         System.out.println(comments);
@@ -90,6 +93,7 @@ public class CommentsService {
         Optional<Comment> comments=commentsRepository.findById(id);
         return comments.map(this::mapToCommentResponse).get();
     }
+    @CacheEvict(value = "commentCache", key = "#id")
     public void updateComment(String id, String newContent) {
         Comment comment = commentsRepository.findById(id).orElse(null);
 
@@ -109,6 +113,7 @@ public class CommentsService {
 
             }
         }
+    @CacheEvict(value = "commentCache", key = "#id")
         public void deleteAllCommentsByPostId(String postId){
            commentsRepository.deleteBypostid(postId);
             /*
