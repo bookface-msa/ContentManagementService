@@ -150,6 +150,7 @@ public class CommentsService {
                 .content(comment.getContent())
                 .numb_likes(comment.getNumb_likes())
                 .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .build();
 
     }
