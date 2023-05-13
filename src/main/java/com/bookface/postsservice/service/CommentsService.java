@@ -114,7 +114,7 @@ public class CommentsService {
 
             }
         }
-    @CacheEvict(value = "commentCache", key = "#id")
+    @CacheEvict(value = "commentCache", key = "#postId")
         public void deleteAllCommentsByPostId(String postId){
            commentsRepository.deleteBypostid(postId);
             /*

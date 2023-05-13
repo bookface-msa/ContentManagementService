@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -29,6 +30,8 @@ public class PostsService {
 
     @Autowired
     private final FirebaseInterface IFirebase;
+
+    private final CommentsService commentsService;
 
 
     public void createPost(PostsRequest postsRequest) throws Exception {
@@ -97,6 +100,7 @@ public class PostsService {
     }
 
     @CacheEvict(value = "postCache", key = "#id")
+    @Transactional
     public void deletePost(String id) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
         if (post != null) {
@@ -106,11 +110,13 @@ public class PostsService {
                     String path = new URL(imageUrl).getPath();
                     String fileName = path.substring(path.lastIndexOf('/') + 1);
                     IFirebase.delete(fileName);
-                }catch(Exception e){
+                } catch (Exception e) {
                     log.info(e.getMessage());
                 }
             }
             postsRepository.deleteById(id);
+            commentsService.deleteAllCommentsByPostId(id);
+
         }else{
             throw new Exception();
         }
