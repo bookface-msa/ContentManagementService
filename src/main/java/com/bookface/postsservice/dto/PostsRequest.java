@@ -16,6 +16,7 @@ public class PostsRequest {
     private String author_id;
     private String title;
     private String body;
+    private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private MultipartFile file;

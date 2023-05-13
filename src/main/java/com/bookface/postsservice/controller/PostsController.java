@@ -49,6 +49,14 @@ public class PostsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such post exists.");
         }
     }
+    @GetMapping("/published/{authorId}")
+    public  List<PostsResponse> getPublishedPostsByAuthorId(@PathVariable String authorId) {
+        return postsService.getPublishedPostsByAuthorId(authorId);
+    }
+    @GetMapping("/drafted/{authorId}")
+    public  List<PostsResponse> getDraftedPostsByAuthorId(@PathVariable String authorId) {
+        return postsService.getDraftedPostsByAuthorId(authorId);
+    }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

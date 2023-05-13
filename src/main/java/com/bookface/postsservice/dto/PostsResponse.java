@@ -21,6 +21,7 @@ public class PostsResponse implements Serializable {
     private String photoURL;
     private int claps;
     private int commentsCount;
+    private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

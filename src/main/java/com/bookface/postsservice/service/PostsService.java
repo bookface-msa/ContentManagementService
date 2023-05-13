@@ -46,9 +46,11 @@ public class PostsService {
 
         Post post = Post.builder()
                 .title(postsRequest.getTitle())
+                .authorId("filler")
                 .body(postsRequest.getBody())
                 .claps(0)
                 .commentCount(0)
+                .published(postsRequest.isPublished())
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
                 .build();
@@ -81,6 +83,16 @@ public class PostsService {
     public PostsResponse getPostById(String id) {
         Optional<Post> post = postsRepository.findById(id);
         return post.map(this::mapToPostResponse).get();
+    }
+
+
+    public List<PostsResponse> getPublishedPostsByAuthorId(String authorId) {
+        List<Post> publishedPosts = postsRepository.findByAuthorIdAndPublishedTrue(authorId);
+        return publishedPosts.stream().map(this::mapToPostResponse).toList();
+    }
+    public List<PostsResponse> getDraftedPostsByAuthorId(String authorId) {
+        List<Post> draftedPosts = postsRepository.findByAuthorIdAndPublishedFalse(authorId);
+        return draftedPosts.stream().map(this::mapToPostResponse).toList();
     }
 
     @CacheEvict(value = "postCache", key = "#id")
@@ -152,11 +164,13 @@ public class PostsService {
     private PostsResponse mapToPostResponse(Post post) {
         return PostsResponse.builder()
                 .id(post.getId())
+                .author_id(post.getAuthorId())
                 .title(post.getTitle())
                 .body(post.getBody())
                 .claps(post.getClaps())
                 .commentsCount(post.getCommentCount())
                 .photoURL(post.getPhotoURL())
+                .published(post.isPublished())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
