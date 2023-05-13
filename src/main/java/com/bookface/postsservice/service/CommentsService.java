@@ -30,6 +30,7 @@ public class CommentsService {
 
 
 
+    @CacheEvict(value = "commentCache", key="#postId")
     public void createComment(CommentRequest commentRequest,String postId) throws Exception{
         Optional<Post> verify_post = postRepository.findById(postId);
         if (verify_post==null){
@@ -50,7 +51,7 @@ public class CommentsService {
         log.info("comment{}is saved",comment.getId());
 
     }
-    @Cacheable(value = "commentCache")
+    @Cacheable(value = "commentCache", key="#postId")
     public List<CommentResponse> getALLComments(String postId) {
         List<Comment> comments=getAllCommentsByPostId(postId);
         System.out.println(comments);
