@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
@@ -20,45 +21,14 @@ import java.time.LocalDateTime;
 public class Post {
     @Id
     private String id;
-    private String author_id;
+    @Field(name = "author_id")
+    private String authorId;
     private String title;
-    private String subTitle;
     private String body;
     private String photoURL;
     private int claps;
+    private int commentCount;
+    private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-
-//    public Post(String id, String title, String subTitle, Date createdAt,Date updatedAt, String body){
-//        this.id = id;
-//        this.title = title;
-//        this.subTitle = subTitle;
-//        this.body = body;
-//        this.createdAt = createdAt;
-//        this.updatedAt = updatedAt;
-//    }
-//    public String getId() {
-//        return id;
-//    }
-
-//    public String getTitle() {
-//        return title;
-//    }
-//
-//    public String getSubTitle() {
-//        return subTitle;
-//    }
-//
-//    public LocalDateTime getCreationDate() {
-//        return createdAt;
-//    }
-//    public LocalDateTime getUpdateDate() {
-//        return updatedAt;
-//    }
-//
-//    public String getBody() {
-//        return body;
-//    }
-
 }

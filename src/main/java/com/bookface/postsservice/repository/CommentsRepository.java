@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CommentsRepository extends MongoRepository <Comment,String> {
+List<Comment> findBypostid (String post_id);
+List<Comment> deleteBypostid (String post_id);
 }
 
 
