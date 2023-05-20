@@ -61,7 +61,9 @@ public class CommentsService {
     private MongoTemplate mongoTemplate;
     public List<Comment> getAllCommentsByPostId(String postId){
         Query query=new Query(Criteria.where("post_Id").is(postId));
-        return mongoTemplate.find(query, Comment.class);
+        List<Comment> comments=mongoTemplate.find(query,Comment.class);
+        System.out.println(comments);
+        return comments;
     }
     /*
     public List<Comment> getAllCommentsOfPost(String postId){
