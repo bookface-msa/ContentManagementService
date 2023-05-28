@@ -11,11 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -29,12 +26,15 @@ public class PostsService {
     private final PostsRepository postsRepository;
 
     @Autowired
-    private final FirebaseInterface IFirebase;
+    private final CategoriesService categoriesService;
 
-    private final CommentsService commentsService;
+    @Autowired
+    private final FirebaseInterface IFirebase;
 
 
     public void createPost(PostsRequest postsRequest) throws Exception {
+        System.out.println(postsRequest);
+        System.out.println("postttsrequresss");
         if (postsRequest.getTitle() == null || postsRequest.getTitle().length() == 0) {
             throw new Exception("Post is missing a Title");
         }
@@ -46,11 +46,10 @@ public class PostsService {
 
         Post post = Post.builder()
                 .title(postsRequest.getTitle())
-                .authorId("filler")
                 .body(postsRequest.getBody())
+                .categoryNames(postsRequest.getCategoryNames())
                 .claps(0)
                 .commentCount(0)
-                .published(postsRequest.isPublished())
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
                 .build();
@@ -81,21 +80,11 @@ public class PostsService {
 
     @Cacheable(value = "postCache", key = "#id")
     public PostsResponse getPostById(String id) {
+        System.out.println("Geting");
         Optional<Post> post = postsRepository.findById(id);
         return post.map(this::mapToPostResponse).get();
     }
 
-
-    public List<PostsResponse> getPublishedPostsByAuthorId(String authorId) {
-        List<Post> publishedPosts = postsRepository.findByAuthorIdAndPublishedTrue(authorId);
-        return publishedPosts.stream().map(this::mapToPostResponse).toList();
-    }
-    public List<PostsResponse> getDraftedPostsByAuthorId(String authorId) {
-        List<Post> draftedPosts = postsRepository.findByAuthorIdAndPublishedFalse(authorId);
-        return draftedPosts.stream().map(this::mapToPostResponse).toList();
-    }
-
-    @CacheEvict(value = "postCache", key = "#id")
     public void updatePost(String id, String newTitle, String newBody) {
         Post post = postsRepository.findById(id).orElse(null);
         //TODO: Check if the current session userId matches the posts authorID
@@ -112,9 +101,19 @@ public class PostsService {
     }
 
     @CacheEvict(value = "postCache", key = "#id")
-    @Transactional
     public void deletePost(String id) throws Exception {
+        System.out.println(id);
+        System.out.println("delete post idddd 222222");
+        List<PostsResponse> posts = getAllPosts();
+        for(PostsResponse post: posts){
+            System.out.println(post);
+        }
+        System.out.println("all postsssss");
         Post post = postsRepository.findById(id).orElse(null);
+        System.out.println(post);
+        System.out.println("post foundddddd");
+        List<String> categories = post.getCategoryNames();
+        categoriesService.deleteCategoryOrReduceCount(categories);
         if (post != null) {
             String imageUrl = post.getPhotoURL();
             if (imageUrl != null) {
@@ -122,13 +121,11 @@ public class PostsService {
                     String path = new URL(imageUrl).getPath();
                     String fileName = path.substring(path.lastIndexOf('/') + 1);
                     IFirebase.delete(fileName);
-                } catch (Exception e) {
+                }catch(Exception e){
                     log.info(e.getMessage());
                 }
             }
             postsRepository.deleteById(id);
-            commentsService.deleteAllCommentsByPostId(id);
-
         }else{
             throw new Exception();
         }
@@ -164,13 +161,11 @@ public class PostsService {
     private PostsResponse mapToPostResponse(Post post) {
         return PostsResponse.builder()
                 .id(post.getId())
-                .author_id(post.getAuthorId())
                 .title(post.getTitle())
                 .body(post.getBody())
                 .claps(post.getClaps())
                 .commentsCount(post.getCommentCount())
                 .photoURL(post.getPhotoURL())
-                .published(post.isPublished())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
