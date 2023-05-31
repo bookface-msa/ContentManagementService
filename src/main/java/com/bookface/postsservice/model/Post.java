@@ -31,4 +31,5 @@ public class Post {
     private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    //TODO id,authorId,title,body,createdAt,updatedAt,tags send to elastic search using MQ on create/update/delete
 }

@@ -1,12 +1,15 @@
 package com.bookface.postsservice.service;
 
+import com.bookface.postsservice.dto.ElasticPostsMessage;
 import com.bookface.postsservice.dto.PostsRequest;
 import com.bookface.postsservice.dto.PostsResponse;
 import com.bookface.postsservice.firebase.FirebaseInterface;
 import com.bookface.postsservice.model.Post;
+import com.bookface.postsservice.mqconfig.MessagingConfig;
 import com.bookface.postsservice.repository.PostsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +36,8 @@ public class PostsService {
     private final FirebaseInterface IFirebase;
 
     private final CommentsService commentsService;
+    @Autowired
+    private RabbitTemplate template;
 
 
     public void createPost(PostsRequest postsRequest) throws Exception {
@@ -69,6 +75,17 @@ public class PostsService {
         }
 
         postsRepository.insert(post);
+
+        ElasticPostsMessage postMessage = ElasticPostsMessage.builder()
+                .id(post.getId())
+                .authorId(post.getAuthorId())
+                .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
+                .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
+                .body(post.getBody())
+                .title(post.getTitle())
+                .build();
+        template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_CREATE,postMessage);
+
         log.info("Post {} Saved", post.getId());
     }
 
@@ -108,6 +125,15 @@ public class PostsService {
             }
             post.setUpdatedAt(java.time.LocalDateTime.now());
             postsRepository.save(post);
+            ElasticPostsMessage postMessage = ElasticPostsMessage.builder()
+                    .id(post.getId())
+                    .authorId(post.getAuthorId())
+                    .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
+                    .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
+                    .body(post.getBody())
+                    .title(post.getTitle())
+                    .build();
+            template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_UPDATE,postMessage);
         }
     }
 
@@ -128,6 +154,7 @@ public class PostsService {
             }
             postsRepository.deleteById(id);
             commentsService.deleteAllCommentsByPostId(id);
+            template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_DELETE,post.getId());
 
         }else{
             throw new Exception();
@@ -142,24 +169,7 @@ public class PostsService {
         }
     }
 
-    public void incrementComments(String id) {
-        Post post = postsRepository.findById(id).orElse(null);
-        if (post != null) {
-            post.setCommentCount(post.getCommentCount() + 1);
-            postsRepository.save(post);
-        }
-    }
 
-    public void decrementComments(String id) {
-        Post post = postsRepository.findById(id).orElse(null);
-        if (post != null) {
-            int commentCount = post.getCommentCount();
-            if (commentCount > 0) {
-                post.setCommentCount(post.getCommentCount() - 1);
-                postsRepository.save(post);
-            }
-        }
-    }
 
     private PostsResponse mapToPostResponse(Post post) {
         return PostsResponse.builder()
@@ -171,8 +181,8 @@ public class PostsService {
                 .commentsCount(post.getCommentCount())
                 .photoURL(post.getPhotoURL())
                 .published(post.isPublished())
-                .createdAt(post.getCreatedAt())
-                .updatedAt(post.getUpdatedAt())
+                .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
+                .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
                 .build();
     }
 
