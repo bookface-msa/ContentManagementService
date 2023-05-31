@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,14 +65,22 @@ public class PostsService {
 
         //Save image to firebase and save image url.
         try {
-            MultipartFile file = postsRequest.getFile();
-            if (file != null) {
-                String fileName = IFirebase.save(file);
-                String imageUrl = IFirebase.getImageUrl(fileName);
-                post.setPhotoURL(imageUrl);
+            List<MultipartFile> files = postsRequest.getFiles();
+            System.out.println(files.size());
+            if(files != null) {
+                for (MultipartFile file : files) {
+                    String fileName = IFirebase.save(file);
+                    String imageUrl = IFirebase.getImageUrl(fileName);
+                    if (post.getPhotoURL() == null) {
+                        post.setPhotoURL(new ArrayList<String>());
+                    }
+
+                    post.getPhotoURL().add(imageUrl);
+                }
             }
 
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new Exception("Failed to upload Image");
         }
 
@@ -142,16 +152,18 @@ public class PostsService {
     public void deletePost(String id) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
         if (post != null) {
-            String imageUrl = post.getPhotoURL();
-            if (imageUrl != null) {
-                try {
-                    String path = new URL(imageUrl).getPath();
-                    String fileName = path.substring(path.lastIndexOf('/') + 1);
-                    IFirebase.delete(fileName);
-                } catch (Exception e) {
-                    log.info(e.getMessage());
+            if(post.getPhotoURL() != null) {
+                for (String imageUrl : post.getPhotoURL()) {
+                    try {
+                        String path = new URL(imageUrl).getPath();
+                        String fileName = path.substring(path.lastIndexOf('/') + 1);
+                        IFirebase.delete(fileName);
+                    } catch (Exception e) {
+                        log.info(e.getMessage());
+                    }
                 }
             }
+
             postsRepository.deleteById(id);
             commentsService.deleteAllCommentsByPostId(id);
             template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_DELETE,post.getId());
@@ -161,6 +173,7 @@ public class PostsService {
         }
     }
 
+    @CacheEvict(value = "postCache", key = "#id")
     public void clap(String id) {
         Post post = postsRepository.findById(id).orElse(null);
         if (post != null) {
