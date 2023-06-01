@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -19,6 +20,6 @@ public class PostsRequest {
     private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private MultipartFile file;
+    private List<MultipartFile> files;
 
 }

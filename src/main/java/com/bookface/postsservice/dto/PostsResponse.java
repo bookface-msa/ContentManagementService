@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,7 +19,7 @@ public class PostsResponse implements Serializable {
     private String author_id;
     private String title;
     private String body;
-    private String photoURL;
+    private List<String> photoURL;
     private int claps;
     private int commentsCount;
     private boolean published;
