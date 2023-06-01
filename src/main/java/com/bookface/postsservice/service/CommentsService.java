@@ -55,7 +55,6 @@ public class CommentsService {
     @Cacheable(value = "commentCache", key="#postId")
     public List<CommentResponse> getALLComments(String postId) {
         List<Comment> comments=getAllCommentsByPostId(postId);
-        System.out.println(comments);
 
       return comments.stream().map(this::mapToCommentResponse).toList();
        // return commentsRepository.findByPostId(postId);
@@ -108,12 +107,10 @@ public class CommentsService {
             commentsRepository.save(comment);
         }
     }
+    @CacheEvict(value = "commentCache", key = "#postId")
         public void deleteComment(String id, String postId) {
             Comment comment = commentsRepository.findById(id).orElse(null);
-            System.out.println(id);
-            System.out.println("heeee1" + comment);
             if(comment != null) {
-                System.out.println("heeee2" + comment);
                 commentsRepository.deleteById(id);
                 decrementComments(postId);
             }

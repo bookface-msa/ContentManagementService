@@ -17,6 +17,7 @@ public class PostsRequest {
     private String author_id;
     private String title;
     private String body;
+    private List<String> categoryNames;
     private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

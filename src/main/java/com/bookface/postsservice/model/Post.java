@@ -26,6 +26,7 @@ public class Post {
     private String authorId;
     private String title;
     private String body;
+    private List<String> categoryNames;
     private List<String> photoURL;
     private int claps;
     private int commentCount;

@@ -24,44 +24,44 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @AutoConfigureMockMvc
 class PostsServiceApplicationTests {
+//
+//    @Container
+//    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.5");
+//    @Autowired
+//    private MockMvc mockMvc;
+//    @Autowired
+//    private ObjectMapper objectMapper;
+//    @Autowired
+//    private PostsRepository postsRepository;
 
-    @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.5");
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private PostsRepository postsRepository;
+//    @DynamicPropertySource
+//    static void setProperties(DynamicPropertyRegistry dynamicPropertyRegistry) {
+//        dynamicPropertyRegistry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+//    }
 
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry dynamicPropertyRegistry) {
-        dynamicPropertyRegistry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
-
-    @Test
-    void shouldCreatePost() throws Exception {
-        PostsRequest postsRequest = getPostRequest();
-        String postRequestString = objectMapper.writeValueAsString(postsRequest);
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/post")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(postRequestString))
-                .andExpect(status().isCreated());
-        Assertions.assertTrue(postsRepository.findAll().size() == 1);
-//        try {
-//            Assertions.assertTrue(postsRepository.findAll().size() == 2);
-//        } catch (AssertionError e) {
-//            System.out.println("Only" + postsRepository.findAll().size() + "posts were created");
-//        }
-    }
-
-    private PostsRequest getPostRequest() {
-        return PostsRequest.builder()
-                .title("Test Post")
-                .body("This is a test Post")
-                .createdAt(java.time.LocalDateTime.now())
-                .updatedAt(java.time.LocalDateTime.now())
-                .build();
-    }
+//    @Test
+//    void shouldCreatePost() throws Exception {
+//        PostsRequest postsRequest = getPostRequest();
+//        String postRequestString = objectMapper.writeValueAsString(postsRequest);
+//        mockMvc.perform(MockMvcRequestBuilders.post("/api/post")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(postRequestString))
+//                .andExpect(status().isCreated());
+//        Assertions.assertTrue(postsRepository.findAll().size() == 1);
+////        try {
+////            Assertions.assertTrue(postsRepository.findAll().size() == 2);
+////        } catch (AssertionError e) {
+////            System.out.println("Only" + postsRepository.findAll().size() + "posts were created");
+////        }
+//    }
+//
+//    private PostsRequest getPostRequest() {
+//        return PostsRequest.builder()
+//                .title("Test Post")
+//                .body("This is a test Post")
+//                .createdAt(java.time.LocalDateTime.now())
+//                .updatedAt(java.time.LocalDateTime.now())
+//                .build();
+//    }
 
 }

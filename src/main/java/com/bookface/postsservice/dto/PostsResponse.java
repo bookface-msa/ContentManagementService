@@ -19,6 +19,7 @@ public class PostsResponse implements Serializable {
     private String author_id;
     private String title;
     private String body;
+    private List<String> categoryNames;
     private List<String> photoURL;
     private int claps;
     private int commentsCount;

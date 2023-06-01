@@ -35,6 +35,9 @@ public class PostsService {
     private final PostsRepository postsRepository;
 
     @Autowired
+    private final CategoriesService categoriesService;
+
+    @Autowired
     private final FirebaseInterface IFirebase;
 
     private final CommentsService commentsService;
@@ -57,12 +60,12 @@ public class PostsService {
                 .authorId("filler")
                 .body(postsRequest.getBody())
                 .claps(0)
+                .categoryNames(postsRequest.getCategoryNames())
                 .commentCount(0)
                 .published(postsRequest.isPublished())
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
                 .build();
-
         //Save image to firebase and save image url.
         try {
             List<MultipartFile> files = postsRequest.getFiles();
@@ -151,6 +154,8 @@ public class PostsService {
     @Transactional
     public void deletePost(String id) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
+        List<String> categories = post.getCategoryNames();
+        categoriesService.deleteCategoryOrReduceCount(categories);
         if (post != null) {
             if(post.getPhotoURL() != null) {
                 for (String imageUrl : post.getPhotoURL()) {
@@ -192,6 +197,7 @@ public class PostsService {
                 .body(post.getBody())
                 .claps(post.getClaps())
                 .commentsCount(post.getCommentCount())
+                .categoryNames(post.getCategoryNames())
                 .photoURL(post.getPhotoURL())
                 .published(post.isPublished())
                 .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
