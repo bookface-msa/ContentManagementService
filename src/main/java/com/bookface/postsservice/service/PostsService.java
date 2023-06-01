@@ -1,14 +1,18 @@
 package com.bookface.postsservice.service;
 
+import com.bookface.postsservice.dto.ElasticPostsMessage;
 import com.bookface.postsservice.dto.PostsRequest;
 import com.bookface.postsservice.dto.PostsResponse;
 import com.bookface.postsservice.firebase.FirebaseInterface;
 import com.bookface.postsservice.model.Post;
+import com.bookface.postsservice.mqconfig.MessagingConfig;
 import com.bookface.postsservice.repository.PostsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +41,8 @@ public class PostsService {
     private final FirebaseInterface IFirebase;
 
     private final CommentsService commentsService;
+    @Autowired
+    private RabbitTemplate template;
 
 
     public void createPost(PostsRequest postsRequest) throws Exception {
@@ -60,18 +68,37 @@ public class PostsService {
                 .build();
         //Save image to firebase and save image url.
         try {
-            MultipartFile file = postsRequest.getFile();
-            if (file != null) {
-                String fileName = IFirebase.save(file);
-                String imageUrl = IFirebase.getImageUrl(fileName);
-                post.setPhotoURL(imageUrl);
+            List<MultipartFile> files = postsRequest.getFiles();
+            System.out.println(files.size());
+            if(files != null) {
+                for (MultipartFile file : files) {
+                    String fileName = IFirebase.save(file);
+                    String imageUrl = IFirebase.getImageUrl(fileName);
+                    if (post.getPhotoURL() == null) {
+                        post.setPhotoURL(new ArrayList<String>());
+                    }
+
+                    post.getPhotoURL().add(imageUrl);
+                }
             }
 
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new Exception("Failed to upload Image");
         }
 
         postsRepository.insert(post);
+
+        ElasticPostsMessage postMessage = ElasticPostsMessage.builder()
+                .id(post.getId())
+                .authorId(post.getAuthorId())
+                .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
+                .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
+                .body(post.getBody())
+                .title(post.getTitle())
+                .build();
+        template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_CREATE,postMessage);
+
         log.info("Post {} Saved", post.getId());
     }
 
@@ -111,6 +138,15 @@ public class PostsService {
             }
             post.setUpdatedAt(java.time.LocalDateTime.now());
             postsRepository.save(post);
+            ElasticPostsMessage postMessage = ElasticPostsMessage.builder()
+                    .id(post.getId())
+                    .authorId(post.getAuthorId())
+                    .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
+                    .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
+                    .body(post.getBody())
+                    .title(post.getTitle())
+                    .build();
+            template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_UPDATE,postMessage);
         }
     }
 
@@ -121,24 +157,28 @@ public class PostsService {
         List<String> categories = post.getCategoryNames();
         categoriesService.deleteCategoryOrReduceCount(categories);
         if (post != null) {
-            String imageUrl = post.getPhotoURL();
-            if (imageUrl != null) {
-                try {
-                    String path = new URL(imageUrl).getPath();
-                    String fileName = path.substring(path.lastIndexOf('/') + 1);
-                    IFirebase.delete(fileName);
-                } catch (Exception e) {
-                    log.info(e.getMessage());
+            if(post.getPhotoURL() != null) {
+                for (String imageUrl : post.getPhotoURL()) {
+                    try {
+                        String path = new URL(imageUrl).getPath();
+                        String fileName = path.substring(path.lastIndexOf('/') + 1);
+                        IFirebase.delete(fileName);
+                    } catch (Exception e) {
+                        log.info(e.getMessage());
+                    }
                 }
             }
+
             postsRepository.deleteById(id);
             commentsService.deleteAllCommentsByPostId(id);
+            template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_DELETE,post.getId());
 
         }else{
             throw new Exception();
         }
     }
 
+    @CacheEvict(value = "postCache", key = "#id")
     public void clap(String id) {
         Post post = postsRepository.findById(id).orElse(null);
         if (post != null) {
@@ -147,24 +187,7 @@ public class PostsService {
         }
     }
 
-    public void incrementComments(String id) {
-        Post post = postsRepository.findById(id).orElse(null);
-        if (post != null) {
-            post.setCommentCount(post.getCommentCount() + 1);
-            postsRepository.save(post);
-        }
-    }
 
-    public void decrementComments(String id) {
-        Post post = postsRepository.findById(id).orElse(null);
-        if (post != null) {
-            int commentCount = post.getCommentCount();
-            if (commentCount > 0) {
-                post.setCommentCount(post.getCommentCount() - 1);
-                postsRepository.save(post);
-            }
-        }
-    }
 
     private PostsResponse mapToPostResponse(Post post) {
         return PostsResponse.builder()
@@ -176,8 +199,8 @@ public class PostsService {
                 .commentsCount(post.getCommentCount())
                 .photoURL(post.getPhotoURL())
                 .published(post.isPublished())
-                .createdAt(post.getCreatedAt())
-                .updatedAt(post.getUpdatedAt())
+                .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
+                .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
                 .build();
     }
 

@@ -59,8 +59,8 @@ public class CommentController {
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity deleteComment(@PathVariable String id) {
-        commentsService.deleteComment(id);
+    public ResponseEntity deleteComment(@PathVariable String id, @PathVariable String postId) {
+        commentsService.deleteComment(id,postId);
         return ResponseEntity.status(HttpStatus.OK).body("Comment Deleted Successfully");
     }
     @PostMapping("/LikesInc/{id}")
