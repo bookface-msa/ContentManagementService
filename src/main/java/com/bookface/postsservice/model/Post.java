@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Document(value = "post")
@@ -25,6 +26,7 @@ public class Post {
     private String authorId;
     private String title;
     private String body;
+    private List<String> categoryNames;
     private String photoURL;
     private int claps;
     private int commentCount;

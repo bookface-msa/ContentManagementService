@@ -2,7 +2,7 @@ package com.bookface.postsservice.service;
 
 import com.bookface.postsservice.dto.PostsRequest;
 import com.bookface.postsservice.dto.PostsResponse;
-import com.bookface.postsservice.firebase.FirebaseInterface;
+//import com.bookface.postsservice.firebase.FirebaseInterface;
 import com.bookface.postsservice.model.Post;
 import com.bookface.postsservice.repository.PostsRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +29,17 @@ public class PostsService {
     private final PostsRepository postsRepository;
 
     @Autowired
-    private final FirebaseInterface IFirebase;
+    private final CategoriesService categoriesService;
+
+    @Autowired
+//    private final FirebaseInterface IFirebase;
 
     private final CommentsService commentsService;
 
 
     public void createPost(PostsRequest postsRequest) throws Exception {
+        System.out.print(postsRequest);
+        System.out.println("posts requestttttt");
         if (postsRequest.getTitle() == null || postsRequest.getTitle().length() == 0) {
             throw new Exception("Post is missing a Title");
         }
@@ -49,19 +54,21 @@ public class PostsService {
                 .authorId("filler")
                 .body(postsRequest.getBody())
                 .claps(0)
+                .categoryNames(postsRequest.getCategoryNames())
                 .commentCount(0)
                 .published(postsRequest.isPublished())
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now())
                 .build();
-
+        System.out.println(post);
+        System.out.println("POSTTTTTTTT");
         //Save image to firebase and save image url.
         try {
             MultipartFile file = postsRequest.getFile();
             if (file != null) {
-                String fileName = IFirebase.save(file);
-                String imageUrl = IFirebase.getImageUrl(fileName);
-                post.setPhotoURL(imageUrl);
+//                String fileName = IFirebase.save(file);
+//                String imageUrl = IFirebase.getImageUrl(fileName);
+//                post.setPhotoURL(imageUrl);
             }
 
         } catch (Exception e) {
@@ -115,13 +122,15 @@ public class PostsService {
     @Transactional
     public void deletePost(String id) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
+        List<String> categories = post.getCategoryNames();
+        categoriesService.deleteCategoryOrReduceCount(categories);
         if (post != null) {
             String imageUrl = post.getPhotoURL();
             if (imageUrl != null) {
                 try {
                     String path = new URL(imageUrl).getPath();
                     String fileName = path.substring(path.lastIndexOf('/') + 1);
-                    IFirebase.delete(fileName);
+//                    IFirebase.delete(fileName);
                 } catch (Exception e) {
                     log.info(e.getMessage());
                 }

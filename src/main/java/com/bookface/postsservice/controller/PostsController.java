@@ -1,8 +1,12 @@
 package com.bookface.postsservice.controller;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
+import com.bookface.postsservice.dto.CategoriesRequest;
 import com.bookface.postsservice.dto.PostsRequest;
 import com.bookface.postsservice.dto.PostsResponse;
+import com.bookface.postsservice.exceptions.BadRequestException;
 import com.bookface.postsservice.service.PostsService;
+import com.bookface.postsservice.controller.CategoriesController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,6 +15,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.sound.midi.SysexMessage;
 import java.net.MalformedURLException;
 import java.util.List;
 
@@ -22,8 +27,23 @@ public class PostsController {
 
     private final PostsService postsService;
 
+    private final CategoriesController categoriesController;
+
     @PostMapping
-    public ResponseEntity<String> createPost(@ModelAttribute PostsRequest postRequest) throws Exception {
+    public ResponseEntity<String> createPost(@RequestBody PostsRequest postRequest) throws Exception {
+
+        System.out.println(postRequest);
+        System.out.println("post requestttttt");
+        List<String> categories = postRequest.getCategoryNames();
+        try {
+            categoriesController.createCategory(categories);
+        }
+        catch (BadRequestException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
         try {
             postsService.createPost(postRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body("Post created successfully.");
