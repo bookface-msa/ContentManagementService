@@ -31,9 +31,6 @@ public class PostsController {
 
     @PostMapping
     public ResponseEntity<String> createPost(@RequestBody PostsRequest postRequest) throws Exception {
-
-        System.out.println(postRequest);
-        System.out.println("post requestttttt");
         List<String> categories = postRequest.getCategoryNames();
         try {
             categoriesController.createCategory(categories);
