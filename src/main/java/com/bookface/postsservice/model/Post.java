@@ -27,7 +27,7 @@ public class Post {
     private String title;
     private String body;
     private List<String> categoryNames;
-    private String photoURL;
+    private List<String> photoURL;
     private int claps;
     private int commentCount;
     private boolean published;

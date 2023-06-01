@@ -17,6 +17,48 @@ import org.springframework.context.annotation.Configuration;
 @EnableRabbit
 
 public class MessagingConfig {
+
+    public static final String CATEGORIES_EXCHANGE = "categoryExchange";
+
+    public static final String CATEGORIES_QUEUE_CREATE = "categoryQueueCreate";
+    public static final String CATEGORIES_ROUTING_KEY_CREATE = "categoryCreate";
+
+    public static final String CATEGORIES_QUEUE_DELETE = "categoryQueueDelete";
+    public static final String CATEGORIES_ROUTING_KEY_DELETE = "categoryDelete";
+
+    @Bean
+    public Queue queueCreateCategory() {
+        return new Queue(CATEGORIES_QUEUE_CREATE);
+    }
+
+    @Bean
+    public Queue queueDeleteCategory() {
+        return new Queue(CATEGORIES_QUEUE_DELETE);
+    }
+
+    @Bean
+    public DirectExchange exchangeCategories() {
+        return new DirectExchange(CATEGORIES_EXCHANGE);
+    }
+
+    @Bean
+    public Binding bindingCreateCategories(
+            Queue queueCreateCategory,
+            DirectExchange exchangeCategories
+    ) {
+        return BindingBuilder.bind(queueCreateCategory)
+                .to(exchangeCategories)
+                .with(CATEGORIES_ROUTING_KEY_CREATE);
+    }
+    @Bean
+    public Binding bindingDeleteCategories(
+            Queue queueDeleteCategory,
+            DirectExchange exchangeCategories
+    ) {
+        return BindingBuilder.bind(queueDeleteCategory)
+                .to(exchangeCategories)
+                .with(CATEGORIES_ROUTING_KEY_DELETE);
+    }
     public static final String EXCHANGE = "elastic.blogs";
 
     public static final String QUEUE_CREATE = "elastic.blogs.create";

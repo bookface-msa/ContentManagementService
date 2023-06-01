@@ -30,7 +30,7 @@ public class PostsController {
     private final CategoriesController categoriesController;
 
     @PostMapping
-    public ResponseEntity<String> createPost(@RequestBody PostsRequest postRequest) throws Exception {
+    public ResponseEntity<String> createPost(@ModelAttribute PostsRequest postRequest) throws Exception {
         List<String> categories = postRequest.getCategoryNames();
         try {
             categoriesController.createCategory(categories);

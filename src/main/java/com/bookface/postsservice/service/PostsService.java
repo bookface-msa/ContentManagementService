@@ -197,6 +197,7 @@ public class PostsService {
                 .body(post.getBody())
                 .claps(post.getClaps())
                 .commentsCount(post.getCommentCount())
+                .categoryNames(post.getCategoryNames())
                 .photoURL(post.getPhotoURL())
                 .published(post.isPublished())
                 .createdAt(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))

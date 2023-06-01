@@ -1,6 +1,6 @@
 package com.bookface.postsservice.service;
 import com.bookface.postsservice.model.Category;
-import com.bookface.postsservice.mqconfig.CategoriesMConfig;
+import com.bookface.postsservice.mqconfig.MessagingConfig;
 import com.bookface.postsservice.repository.CategoriesRepository;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -55,7 +55,7 @@ public class CategoriesService{
                         .categoryCount(1)
                         .build();
                 String message = "Category created: " + categoryName;
-                rabbitTemplate.convertAndSend(CategoriesMConfig.CATEGORIES_EXCHANGE, CategoriesMConfig.CATEGORIES_ROUTING_KEY_CREATE, message);
+                rabbitTemplate.convertAndSend(MessagingConfig.CATEGORIES_EXCHANGE, MessagingConfig.CATEGORIES_ROUTING_KEY_CREATE, message);
             }
             saveCategory(category);
 
@@ -68,7 +68,7 @@ public class CategoriesService{
             if(category.getCategoryCount() == 1){
                 categoriesRepository.deleteByCategoryName(categoryName);
                 String message = "Category deleted: " + categoryName;
-                rabbitTemplate.convertAndSend(CategoriesMConfig.CATEGORIES_EXCHANGE, CategoriesMConfig.CATEGORIES_ROUTING_KEY_DELETE, message);
+                rabbitTemplate.convertAndSend(MessagingConfig.CATEGORIES_EXCHANGE, MessagingConfig.CATEGORIES_ROUTING_KEY_DELETE, message);
             }
             else{
                 category.setCategoryCount(category.getCategoryCount() - 1);
