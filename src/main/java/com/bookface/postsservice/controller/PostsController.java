@@ -78,8 +78,12 @@ public class PostsController {
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity updatePost(@PathVariable String id, @RequestBody PostUpdateRequest updatePostBody) {
-        postsService.updatePost(id, updatePostBody.title, updatePostBody.body);
-        return ResponseEntity.status(HttpStatus.OK).body("Post Updated Successfully");
+        try {
+            postsService.updatePost(id, updatePostBody.title, updatePostBody.body);
+            return ResponseEntity.status(HttpStatus.OK).body("Post Updated Successfully");
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

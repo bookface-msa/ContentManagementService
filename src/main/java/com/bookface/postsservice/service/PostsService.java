@@ -126,7 +126,7 @@ public class PostsService {
     }
 
     @CacheEvict(value = "postCache", key = "#id")
-    public void updatePost(String id, String newTitle, String newBody) {
+    public void updatePost(String id, String newTitle, String newBody) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
         //TODO: Check if the current session userId matches the posts authorID
         if (post != null) {
@@ -148,15 +148,21 @@ public class PostsService {
                     .build();
             template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_UPDATE,postMessage);
         }
+        else{
+            throw new Exception("Post doesn't exist");
+        }
     }
 
     @CacheEvict(value = "postCache", key = "#id")
     @Transactional
     public void deletePost(String id) throws Exception {
         Post post = postsRepository.findById(id).orElse(null);
-        List<String> categories = post.getCategoryNames();
-        categoriesService.deleteCategoryOrReduceCount(categories);
+
         if (post != null) {
+            if(post.getCategoryNames() != null){
+                List<String> categories = post.getCategoryNames();
+                categoriesService.deleteCategoryOrReduceCount(categories);
+            }
             if(post.getPhotoURL() != null) {
                 for (String imageUrl : post.getPhotoURL()) {
                     try {
