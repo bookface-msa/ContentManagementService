@@ -11,10 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +29,6 @@ import org.springframework.data.mongodb.core.query.Query;
 public class CommentsService {
     private final CommentsRepository commentsRepository;
     private final PostsRepository  postRepository;
-
-
 
     @CacheEvict(value = "commentCache", key="#postId")
     public void createComment(CommentRequest commentRequest,String postId) throws Exception{
@@ -48,6 +48,7 @@ public class CommentsService {
                 .createdAt(java.time.LocalDateTime.now())
                 .updatedAt(java.time.LocalDateTime.now()).build();
         commentsRepository.save(comment);
+        incrementComments(postId);
         log.info("comment{}is saved",comment.getId());
 
     }
@@ -107,11 +108,14 @@ public class CommentsService {
             commentsRepository.save(comment);
         }
     }
-        public void deleteComment(String id) {
+        public void deleteComment(String id, String postId) {
             Comment comment = commentsRepository.findById(id).orElse(null);
+            System.out.println(id);
+            System.out.println("heeee1" + comment);
             if(comment != null) {
+                System.out.println("heeee2" + comment);
                 commentsRepository.deleteById(id);
-
+                decrementComments(postId);
             }
         }
     @CacheEvict(value = "commentCache", key = "#postId")
@@ -150,10 +154,28 @@ public class CommentsService {
                 .author(comment.getAuthor())
                 .content(comment.getContent())
                 .numb_likes(comment.getNumb_likes())
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
+                .createdAt(comment.getCreatedAt().truncatedTo(ChronoUnit.SECONDS))
+                .updatedAt(comment.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
                 .build();
 
+    }
+    public void incrementComments(String id) {
+        Post post = postRepository.findById(id).orElse(null);
+        if (post != null) {
+            post.setCommentCount(post.getCommentCount() + 1);
+            postRepository.save(post);
+        }
+    }
+
+    public void decrementComments(String id) {
+        Post post = postRepository.findById(id).orElse(null);
+        if (post != null) {
+            int commentCount = post.getCommentCount();
+            if (commentCount > 0) {
+                post.setCommentCount(post.getCommentCount() - 1);
+                postRepository.save(post);
+            }
+        }
     }
     }
 

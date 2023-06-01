@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Document(value = "post")
@@ -25,10 +26,11 @@ public class Post {
     private String authorId;
     private String title;
     private String body;
-    private String photoURL;
+    private List<String> photoURL;
     private int claps;
     private int commentCount;
     private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    //TODO id,authorId,title,body,createdAt,updatedAt,tags send to elastic search using MQ on create/update/delete
 }
