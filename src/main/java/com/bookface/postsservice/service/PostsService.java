@@ -154,6 +154,7 @@ public class PostsService {
                         .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
                         .body(post.getBody())
                         .title(post.getTitle())
+                        .tags(post.getCategoryNames().toArray(new String[0]))
                         .build();
                 template.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY_CREATE, postMessage);
 
@@ -234,6 +235,7 @@ public class PostsService {
                     .updatedAt(post.getUpdatedAt().truncatedTo(ChronoUnit.SECONDS))
                     .body(post.getBody())
                     .title(post.getTitle())
+                    .tags(post.getCategoryNames().toArray(new String[0]))
                     .build();
             template.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY_UPDATE, postMessage);
         } else {

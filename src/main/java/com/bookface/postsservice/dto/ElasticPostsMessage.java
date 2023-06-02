@@ -16,6 +16,7 @@ public class ElasticPostsMessage {
     private String authorId;
     private String title;
     private String body;
+    private String[] tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
