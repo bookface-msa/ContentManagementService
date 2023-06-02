@@ -6,6 +6,7 @@ import com.bookface.postsservice.model.Comment;
 import com.bookface.postsservice.model.Post;
 import com.bookface.postsservice.repository.CommentsRepository;
 import com.bookface.postsservice.repository.PostsRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,20 +30,55 @@ import org.springframework.data.mongodb.core.query.Query;
 public class CommentsService {
     private final CommentsRepository commentsRepository;
     private final PostsRepository  postRepository;
+    private final jwtService jwtService;
 
-    @CacheEvict(value = "commentCache", key="#postId")
-    public void createComment(CommentRequest commentRequest,String postId) throws Exception{
+    public boolean compareUsername(HttpServletRequest request,String authorid){
+        String authorizationHeader = request.getHeader("Authorization");
+        // String encodedCredentials = authorizationHeader.substring(7);
+        String token=authorizationHeader.substring(7);
+        String id=jwtService.extractId(token);
+        return authorid.equals(id);
+
+    }
+    public boolean checkIfLoggedInAndToken(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        String token = authorizationHeader.substring(7);
+        boolean isLoggedIn = token != null;
+        if (!isLoggedIn) {
+            return false;
+        } else {
+            boolean checkte = jwtService.isTokenExpired(token);
+            if (checkte) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public String getId(HttpServletRequest request){
+        String authorizationHeader = request.getHeader("Authorization");
+        String token=authorizationHeader.substring(7);
+        String id=jwtService.extractId(token);
+        return id;
+
+    }
+    @CacheEvict(value = {"commentCache", "postCache"}, key="#postId")
+    public void createComment(CommentRequest commentRequest,String postId,HttpServletRequest request) throws Exception{
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
+        String username=getId(request);
         Optional<Post> verify_post = postRepository.findById(postId);
         if (verify_post==null){
             throw new Exception("comment can't be added wrong post id");
-    }
+        }
         if(commentRequest.getContent().length()==0){
             throw new Exception("you can't post an empty comment");
         }
 
         Comment comment=Comment.builder()
                 .postid(postId)
-                .author(commentRequest.getAuthor())
+                .author(username)
                 .content(commentRequest.getContent())
                 .numb_likes(0)
                 .createdAt(java.time.LocalDateTime.now())
@@ -56,49 +92,32 @@ public class CommentsService {
     public List<CommentResponse> getALLComments(String postId) {
         List<Comment> comments=getAllCommentsByPostId(postId);
 
-      return comments.stream().map(this::mapToCommentResponse).toList();
-       // return commentsRepository.findByPostId(postId);
+        return comments.stream().map(this::mapToCommentResponse).toList();
+        // return commentsRepository.findByPostId(postId);
 
     }
     @Autowired
     private MongoTemplate mongoTemplate;
     public List<Comment> getAllCommentsByPostId(String postId){
-
-//        Query query=new Query(Criteria.where("post_id").is(postId));
-//       List<Comment> comments =  mongoTemplate.find(query, Comment.class);
-       // List<Comment> comments = commentsRepository.findBy()
-//
-//        List<Comment> comments = mongoTemplate.find(
-//                Query.query(Criteria.where("post_id").is(postId)),
-//                Comment.class
-//        );
-
         return commentsRepository.findBypostid(postId);
-       // System.out.println(comments);
-
-       // return comments;
     }
-    /*
-    public List<Comment> getAllCommentsOfPost(String postId){
-        List<Comment> comments=commentsRepository.findAll();
-        List<Comment> returned_list=new ArrayList<>();
-        for(int i=0;i<comments.size();i++){
-            if(comments.get(i).getPost_id().equals(postId)){
-                  returned_list.add(comments.get(i));
-            }
-
-        }
-       return returned_list;
-    }*/
     public CommentResponse getCommentById(String id) {
         Optional<Comment> comments=commentsRepository.findById(id);
         return comments.map(this::mapToCommentResponse).get();
     }
-    @CacheEvict(value = "commentCache", key = "#id")
-    public void updateComment(String id, String newContent) {
+    @CacheEvict(value = "commentCache", key = "#postid")
+    public void updateComment(String id, String postid,String newContent,HttpServletRequest request) throws Exception {
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
         Comment comment = commentsRepository.findById(id).orElse(null);
 
         if (comment != null) {
+            boolean check =compareUsername(request,comment.getAuthor());
+            if(!check){
+                throw new Exception("Wrong user");
+            }
+            System.out.println("PASSED");
             if (newContent != null && newContent.length() != 0) {
                 comment.setContent(newContent);
             }
@@ -107,25 +126,26 @@ public class CommentsService {
             commentsRepository.save(comment);
         }
     }
-    @CacheEvict(value = "commentCache", key = "#postId")
-        public void deleteComment(String id, String postId) {
-            Comment comment = commentsRepository.findById(id).orElse(null);
-            if(comment != null) {
-                commentsRepository.deleteById(id);
-                decrementComments(postId);
+    @CacheEvict(value = {"commentCache", "postCache"}, key = "#postId")
+    public void deleteComment(String id, String postId,HttpServletRequest request) throws Exception {
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
+        // String username=getuser(request);
+        Comment comment = commentsRepository.findById(id).orElse(null);
+        if(comment != null) {
+            boolean check =compareUsername(request,comment.getAuthor());
+            if(!check){
+                throw new Exception("Wrong user");
             }
+            commentsRepository.deleteById(id);
+            decrementComments(postId);
         }
+    }
     @CacheEvict(value = "commentCache", key = "#postId")
-        public void deleteAllCommentsByPostId(String postId){
-           commentsRepository.deleteBypostid(postId);
-            /*
-           for(int i=0;i<commentsToDelete.size();i++){
-               commentsRepository.deleteById(commentsToDelete.get(i).getId());
-           }*/
-
-          //  return
-
-        }
+    public void deleteAllCommentsByPostId(String postId){
+        commentsRepository.deleteBypostid(postId);
+    }
     public void incrementLikes(String id) {
         Comment comment = commentsRepository.findById(id).orElse(null);
         if (comment!= null) {
@@ -135,7 +155,7 @@ public class CommentsService {
     }
 
     public void decrementLikes(String id) {
-         Comment comment= commentsRepository.findById(id).orElse(null);
+        Comment comment= commentsRepository.findById(id).orElse(null);
         if (comment != null) {
             int LikesCount = comment.getNumb_likes();
             if (LikesCount > 0) {
@@ -174,5 +194,5 @@ public class CommentsService {
             }
         }
     }
-    }
+}
 

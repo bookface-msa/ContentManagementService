@@ -7,8 +7,10 @@ import com.bookface.postsservice.dto.PostsResponse;
 import com.bookface.postsservice.exceptions.BadRequestException;
 import com.bookface.postsservice.service.PostsService;
 import com.bookface.postsservice.controller.CategoriesController;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.Request;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -30,7 +32,7 @@ public class PostsController {
     private final CategoriesController categoriesController;
 
     @PostMapping
-    public ResponseEntity<String> createPost(@ModelAttribute PostsRequest postRequest) throws Exception {
+    public ResponseEntity<String> createPost(@ModelAttribute PostsRequest postRequest, HttpServletRequest request ) throws Exception {
         List<String> categories = postRequest.getCategoryNames();
         try {
             categoriesController.createCategory(categories);
@@ -42,12 +44,14 @@ public class PostsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
         try {
-            postsService.createPost(postRequest);
+            postsService.createPost(postRequest, request);
             return ResponseEntity.status(HttpStatus.CREATED).body("Post created successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
+
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -66,20 +70,39 @@ public class PostsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such post exists.");
         }
     }
-    @GetMapping("/published/{authorId}")
-    public  List<PostsResponse> getPublishedPostsByAuthorId(@PathVariable String authorId) {
-        return postsService.getPublishedPostsByAuthorId(authorId);
+    @GetMapping("/published")
+    public  List<PostsResponse> getPublishedPostsByAuthorId(HttpServletRequest request) {
+        try {
+            return postsService.getPublishedPostsByAuthorId(request);
+        }catch (Exception e){
+            log.info("Not Authenticated");
+            return null;
+        }
     }
-    @GetMapping("/drafted/{authorId}")
-    public  List<PostsResponse> getDraftedPostsByAuthorId(@PathVariable String authorId) {
-        return postsService.getDraftedPostsByAuthorId(authorId);
+    @GetMapping("/drafted")
+    public  List<PostsResponse> getDraftedPostsByAuthorId(HttpServletRequest request) {
+        try {
+            return postsService.getDraftedPostsByAuthorId(request);
+        }catch(Exception e){
+            log.info("Not Authenticated");
+            return null;
+        }
     }
 
+    @PostMapping("/publish/{id}")
+    public  ResponseEntity publishPost(HttpServletRequest request, @PathVariable String id) {
+        try {
+            postsService.publishPost(request, id);
+            return ResponseEntity.status(HttpStatus.OK).body("Post Published");
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity updatePost(@PathVariable String id, @RequestBody PostUpdateRequest updatePostBody) {
+    public ResponseEntity updatePost(@PathVariable String id, @RequestBody PostUpdateRequest updatePostBody, HttpServletRequest request) {
         try {
-            postsService.updatePost(id, updatePostBody.title, updatePostBody.body);
+            postsService.updatePost(id, updatePostBody.title, updatePostBody.body,request);
             return ResponseEntity.status(HttpStatus.OK).body("Post Updated Successfully");
         }catch(Exception e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -88,9 +111,9 @@ public class PostsController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity deletePost(@PathVariable String id) {
+    public ResponseEntity deletePost(@PathVariable String id, HttpServletRequest request) {
         try {
-            postsService.deletePost(id);
+            postsService.deletePost(id,request);
             return ResponseEntity.status(HttpStatus.OK).body("Post Deleted Successfully");
         }catch(Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Post doesn't exist or failed to delete post");

@@ -3,6 +3,7 @@ package com.bookface.postsservice.controller;
 import com.bookface.postsservice.dto.CommentRequest;
 import com.bookface.postsservice.dto.CommentResponse;
 import com.bookface.postsservice.service.CommentsService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,9 +25,9 @@ public class CommentController {
     private final CommentsService commentsService;
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<String> createComment(@RequestBody CommentRequest commentRequest,@PathVariable("postId") String postId) throws Exception{
+    public ResponseEntity<String> createComment(@RequestBody CommentRequest commentRequest, @PathVariable("postId") String postId, HttpServletRequest request) throws Exception{
         try {
-            commentsService.createComment(commentRequest,postId);
+            commentsService.createComment(commentRequest,postId,request);
             return ResponseEntity.status(HttpStatus.CREATED).body("comment created successfully.");}
         catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -53,15 +54,23 @@ public class CommentController {
     }
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity updateComment(@PathVariable String id, @RequestBody CommentRequest updateCommentContent) {
-        commentsService.updateComment(id, updateCommentContent.getContent());
-        return ResponseEntity.status(HttpStatus.OK).body("Comment Updated Successfully");
+    public ResponseEntity updateComment(@PathVariable String id,@PathVariable String postId, @RequestBody CommentRequest updateCommentContent,HttpServletRequest request) throws Exception {
+        try {
+            commentsService.updateComment(id, postId, updateCommentContent.getContent(), request);
+            return ResponseEntity.status(HttpStatus.OK).body("Comment Updated Successfully");
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity deleteComment(@PathVariable String id, @PathVariable String postId) {
-        commentsService.deleteComment(id,postId);
-        return ResponseEntity.status(HttpStatus.OK).body("Comment Deleted Successfully");
+    public ResponseEntity deleteComment(@PathVariable String id, @PathVariable String postId,HttpServletRequest request) throws Exception {
+        try {
+            commentsService.deleteComment(id, postId, request);
+            return ResponseEntity.status(HttpStatus.OK).body("Comment Deleted Successfully");
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
     @PostMapping("/LikesInc/{id}")
     @ResponseStatus(HttpStatus.OK)
