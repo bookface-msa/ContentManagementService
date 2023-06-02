@@ -6,6 +6,6 @@ public class getAllCommentsCommand extends CommentCommand{
     @Override
     public Object execute(HashMap<String, Object> map) throws Exception {
         getService().getALLComments((String) map.get("postId"));
-        return null;
+        return "all post comments retrieved";
     }
 }

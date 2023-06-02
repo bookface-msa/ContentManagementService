@@ -20,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CommentController {
+    String UserId="last100";
 
     private final CommentsService commentsService;
     @PostMapping("")
