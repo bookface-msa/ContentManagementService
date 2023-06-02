@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -173,6 +174,20 @@ public class PostsService {
     }
 
     @CacheEvict(value = "postCache", key = "#id")
+    public void publishPost(HttpServletRequest request, String id) throws Exception {
+        String authorId = getuser(request);
+        Post post = postsRepository.findById(id).orElse(null);
+        if(post!=null) {
+            boolean check=compareUsername(request,post.getAuthorId());
+            if(!check){
+                throw new Exception("Wrong user");
+            }
+            post.setPublished(true);
+            postsRepository.save(post);
+        }
+    }
+
+    @CacheEvict(value = "postCache", key = "#id")
     public void updatePost(String id, String newTitle, String newBody,HttpServletRequest request) throws Exception {
 
         Post post = postsRepository.findById(id).orElse(null);
@@ -180,9 +195,6 @@ public class PostsService {
         if (post != null) {
             String username=getuser(request);
             boolean check=compareUsername(request,post.getAuthorId());
-            System.out.println(username);
-            System.out.println(post.getAuthorId());
-            System.out.println(check);
             if(!check){
                 throw new Exception("Wrong user");
             }

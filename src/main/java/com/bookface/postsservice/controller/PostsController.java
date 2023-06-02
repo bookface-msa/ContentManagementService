@@ -79,6 +79,15 @@ public class PostsController {
         return postsService.getDraftedPostsByAuthorId(request);
     }
 
+    @PostMapping("/publish/{id}")
+    public  ResponseEntity publishPost(HttpServletRequest request, @PathVariable String id) {
+        try {
+            postsService.publishPost(request, id);
+            return ResponseEntity.status(HttpStatus.OK).body("Post Published");
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity updatePost(@PathVariable String id, @RequestBody PostUpdateRequest updatePostBody, HttpServletRequest request) {
