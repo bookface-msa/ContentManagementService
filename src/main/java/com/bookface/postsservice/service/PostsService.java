@@ -60,22 +60,38 @@ public class PostsService {
     private RabbitTemplate template;
     private static final String AUTH_SERVICE_URL = "http://localhost:8080/api/v1/auth/login";
 
-    public boolean compareUsername(HttpServletRequest request,String authorid){
+    public boolean compareUsername(HttpServletRequest request, String authorid) {
         String authorizationHeader = request.getHeader("Authorization");
         // String encodedCredentials = authorizationHeader.substring(7);
-        String token=authorizationHeader.substring(7);
-        String username=jwtService.extractUsername(token);
-        return authorid.equals(username);
+        String token = authorizationHeader.substring(7);
+        String id = jwtService.extractId(token);
+        return authorid.equals(id);
 
     }
 
-    public String getuser(HttpServletRequest request){
+    public boolean checkIfLoggedInAndToken(HttpServletRequest request) {
         String authorizationHeader = request.getHeader("Authorization");
-        String token=authorizationHeader.substring(7);
-        String username=jwtService.extractUsername(token);
-        return username;
+        String token = authorizationHeader.substring(7);
+        boolean isLoggedIn = token != null;
+        if (!isLoggedIn) {
+            return false;
+        } else {
+            boolean checkte = jwtService.isTokenExpired(token);
+            if (checkte) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public String getId(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        String token = authorizationHeader.substring(7);
+        String id = jwtService.extractId(token);
+        return id;
 
     }
+
     public void createPost(PostsRequest postsRequest, HttpServletRequest request) throws Exception {
         if (postsRequest.getTitle() == null || postsRequest.getTitle().length() == 0) {
             throw new Exception("Post is missing a Title");
@@ -85,21 +101,19 @@ public class PostsService {
         }
 // Extract the Base64 encoded credentials from the authorization header
         String authorizationHeader = request.getHeader("Authorization");
-        String token=authorizationHeader.substring(7);
+        String token = authorizationHeader.substring(7);
 
         boolean isLoggedIn = token != null;
         if (!isLoggedIn) {
             throw new Exception("Access denied. User not logged in.");
-        }
-        else{
+        } else {
 
-            boolean checkte=jwtService.isTokenExpired(token);
-            if(checkte){
+            boolean checkte = jwtService.isTokenExpired(token);
+            if (checkte) {
                 throw new Exception("Token Expired");
-            }
-            else {
+            } else {
                 //TODO: get authorID from token or mq?
-                String username=jwtService.extractUsername(token);
+                String username = jwtService.extractId(token);
                 Post post = Post.builder()
                         .title(postsRequest.getTitle())
                         .authorId(username)
@@ -114,7 +128,7 @@ public class PostsService {
                 //Save image to firebase and save image url.
                 try {
                     List<MultipartFile> files = postsRequest.getFiles();
-                    if(files != null) {
+                    if (files != null) {
                         for (MultipartFile file : files) {
                             String fileName = IFirebase.save(file);
                             String imageUrl = IFirebase.getImageUrl(fileName);
@@ -141,12 +155,13 @@ public class PostsService {
                         .body(post.getBody())
                         .title(post.getTitle())
                         .build();
-                template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_CREATE,postMessage);
+                template.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY_CREATE, postMessage);
 
                 log.info("Post {} Saved", post.getId());
             }
 
-        }}
+        }
+    }
 
 
     public List<PostsResponse> getAllPosts() {
@@ -163,23 +178,27 @@ public class PostsService {
 
 
     public List<PostsResponse> getPublishedPostsByAuthorId(HttpServletRequest request) {
-        String authorId = getuser(request);
+        String authorId = getId(request);
         List<Post> publishedPosts = postsRepository.findByAuthorIdAndPublishedTrue(authorId);
         return publishedPosts.stream().map(this::mapToPostResponse).toList();
     }
+
     public List<PostsResponse> getDraftedPostsByAuthorId(HttpServletRequest request) {
-        String authorId = getuser(request);
+        String authorId = getId(request);
         List<Post> draftedPosts = postsRepository.findByAuthorIdAndPublishedFalse(authorId);
         return draftedPosts.stream().map(this::mapToPostResponse).toList();
     }
 
     @CacheEvict(value = "postCache", key = "#id")
     public void publishPost(HttpServletRequest request, String id) throws Exception {
-        String authorId = getuser(request);
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
+        String authorId = getId(request);
         Post post = postsRepository.findById(id).orElse(null);
-        if(post!=null) {
-            boolean check=compareUsername(request,post.getAuthorId());
-            if(!check){
+        if (post != null) {
+            boolean check = compareUsername(request, post.getAuthorId());
+            if (!check) {
                 throw new Exception("Wrong user");
             }
             post.setPublished(true);
@@ -188,14 +207,16 @@ public class PostsService {
     }
 
     @CacheEvict(value = "postCache", key = "#id")
-    public void updatePost(String id, String newTitle, String newBody,HttpServletRequest request) throws Exception {
-
+    public void updatePost(String id, String newTitle, String newBody, HttpServletRequest request) throws Exception {
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
         Post post = postsRepository.findById(id).orElse(null);
         //TODO: Check if the current session userId matches the posts authorID
         if (post != null) {
-            String username=getuser(request);
-            boolean check=compareUsername(request,post.getAuthorId());
-            if(!check){
+            String username = getId(request);
+            boolean check = compareUsername(request, post.getAuthorId());
+            if (!check) {
                 throw new Exception("Wrong user");
             }
             if (newTitle != null && newTitle.length() != 0) {
@@ -214,29 +235,31 @@ public class PostsService {
                     .body(post.getBody())
                     .title(post.getTitle())
                     .build();
-            template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_UPDATE,postMessage);
-        }
-        else{
+            template.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY_UPDATE, postMessage);
+        } else {
             throw new Exception("Post doesn't exist");
         }
     }
 
     @CacheEvict(value = "postCache", key = "#id")
     @Transactional
-    public void deletePost(String id,HttpServletRequest request) throws Exception {
+    public void deletePost(String id, HttpServletRequest request) throws Exception {
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
         Post post = postsRepository.findById(id).orElse(null);
 
         if (post != null) {
-            boolean check=compareUsername(request,post.getAuthorId());
-            if(!check){
+            boolean check = compareUsername(request, post.getAuthorId());
+            if (!check) {
                 throw new Exception("Wrong user");
 
             }
-            if(post.getCategoryNames() != null){
+            if (post.getCategoryNames() != null) {
                 List<String> categories = post.getCategoryNames();
                 categoriesService.deleteCategoryOrReduceCount(categories);
             }
-            if(post.getPhotoURL() != null) {
+            if (post.getPhotoURL() != null) {
                 for (String imageUrl : post.getPhotoURL()) {
                     try {
                         String path = new URL(imageUrl).getPath();
@@ -250,9 +273,9 @@ public class PostsService {
 
             postsRepository.deleteById(id);
             commentsService.deleteAllCommentsByPostId(id);
-            template.convertAndSend(MessagingConfig.EXCHANGE,MessagingConfig.ROUTING_KEY_DELETE,post.getId());
+            template.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY_DELETE, post.getId());
 
-        }else{
+        } else {
             throw new Exception();
         }
     }
@@ -265,7 +288,6 @@ public class PostsService {
             postsRepository.save(post);
         }
     }
-
 
 
     private PostsResponse mapToPostResponse(Post post) {

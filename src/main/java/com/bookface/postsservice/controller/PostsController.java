@@ -72,11 +72,21 @@ public class PostsController {
     }
     @GetMapping("/published")
     public  List<PostsResponse> getPublishedPostsByAuthorId(HttpServletRequest request) {
-        return postsService.getPublishedPostsByAuthorId(request);
+        try {
+            return postsService.getPublishedPostsByAuthorId(request);
+        }catch (Exception e){
+            log.info("Not Authenticated");
+            return null;
+        }
     }
     @GetMapping("/drafted")
     public  List<PostsResponse> getDraftedPostsByAuthorId(HttpServletRequest request) {
-        return postsService.getDraftedPostsByAuthorId(request);
+        try {
+            return postsService.getDraftedPostsByAuthorId(request);
+        }catch(Exception e){
+            log.info("Not Authenticated");
+            return null;
+        }
     }
 
     @PostMapping("/publish/{id}")

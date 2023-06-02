@@ -32,26 +32,42 @@ public class CommentsService {
     private final PostsRepository  postRepository;
     private final jwtService jwtService;
 
-    public boolean compareUsername(HttpServletRequest request, String authorid){
+    public boolean compareUsername(HttpServletRequest request,String authorid){
         String authorizationHeader = request.getHeader("Authorization");
         // String encodedCredentials = authorizationHeader.substring(7);
         String token=authorizationHeader.substring(7);
-        String username=jwtService.extractUsername(token);
-        return authorid.equals(username);
+        String id=jwtService.extractId(token);
+        return authorid.equals(id);
 
     }
-
-    public String getuser(HttpServletRequest request){
+    public boolean checkIfLoggedInAndToken(HttpServletRequest request) {
         String authorizationHeader = request.getHeader("Authorization");
-        // String encodedCredentials = authorizationHeader.substring(7);
+        String token = authorizationHeader.substring(7);
+        boolean isLoggedIn = token != null;
+        if (!isLoggedIn) {
+            return false;
+        } else {
+            boolean checkte = jwtService.isTokenExpired(token);
+            if (checkte) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public String getId(HttpServletRequest request){
+        String authorizationHeader = request.getHeader("Authorization");
         String token=authorizationHeader.substring(7);
-        String username=jwtService.extractUsername(token);
-        return username;
+        String id=jwtService.extractId(token);
+        return id;
 
     }
     @CacheEvict(value = {"commentCache", "postCache"}, key="#postId")
     public void createComment(CommentRequest commentRequest,String postId,HttpServletRequest request) throws Exception{
-        String username=getuser(request);
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
+        String username=getId(request);
         Optional<Post> verify_post = postRepository.findById(postId);
         if (verify_post==null){
             throw new Exception("comment can't be added wrong post id");
@@ -91,6 +107,9 @@ public class CommentsService {
     }
     @CacheEvict(value = "commentCache", key = "#postid")
     public void updateComment(String id, String postid,String newContent,HttpServletRequest request) throws Exception {
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
         Comment comment = commentsRepository.findById(id).orElse(null);
 
         if (comment != null) {
@@ -98,6 +117,7 @@ public class CommentsService {
             if(!check){
                 throw new Exception("Wrong user");
             }
+            System.out.println("PASSED");
             if (newContent != null && newContent.length() != 0) {
                 comment.setContent(newContent);
             }
@@ -108,6 +128,9 @@ public class CommentsService {
     }
     @CacheEvict(value = {"commentCache", "postCache"}, key = "#postId")
     public void deleteComment(String id, String postId,HttpServletRequest request) throws Exception {
+        if (!checkIfLoggedInAndToken(request)) {
+            throw new Exception("User not logged in or token expired");
+        }
         // String username=getuser(request);
         Comment comment = commentsRepository.findById(id).orElse(null);
         if(comment != null) {
