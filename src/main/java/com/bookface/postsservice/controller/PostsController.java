@@ -10,6 +10,7 @@ import com.bookface.postsservice.controller.CategoriesController;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.Request;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -69,13 +70,13 @@ public class PostsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such post exists.");
         }
     }
-    @GetMapping("/published/{authorId}")
-    public  List<PostsResponse> getPublishedPostsByAuthorId(@PathVariable String authorId) {
-        return postsService.getPublishedPostsByAuthorId(authorId);
+    @GetMapping("/published")
+    public  List<PostsResponse> getPublishedPostsByAuthorId(HttpServletRequest request) {
+        return postsService.getPublishedPostsByAuthorId(request);
     }
-    @GetMapping("/drafted/{authorId}")
-    public  List<PostsResponse> getDraftedPostsByAuthorId(@PathVariable String authorId) {
-        return postsService.getDraftedPostsByAuthorId(authorId);
+    @GetMapping("/drafted")
+    public  List<PostsResponse> getDraftedPostsByAuthorId(HttpServletRequest request) {
+        return postsService.getDraftedPostsByAuthorId(request);
     }
 
     @PutMapping("/{id}")

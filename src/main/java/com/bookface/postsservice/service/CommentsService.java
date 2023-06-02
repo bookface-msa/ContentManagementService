@@ -49,7 +49,7 @@ public class CommentsService {
         return username;
 
     }
-    @CacheEvict(value = "commentCache", key="#postId")
+    @CacheEvict(value = {"commentCache", "postCache"}, key="#postId")
     public void createComment(CommentRequest commentRequest,String postId,HttpServletRequest request) throws Exception{
         String username=getuser(request);
         Optional<Post> verify_post = postRepository.findById(postId);
@@ -89,8 +89,8 @@ public class CommentsService {
         Optional<Comment> comments=commentsRepository.findById(id);
         return comments.map(this::mapToCommentResponse).get();
     }
-    @CacheEvict(value = "commentCache", key = "#id")
-    public void updateComment(String id, String newContent,HttpServletRequest request) throws Exception {
+    @CacheEvict(value = "commentCache", key = "#postid")
+    public void updateComment(String id, String postid,String newContent,HttpServletRequest request) throws Exception {
         Comment comment = commentsRepository.findById(id).orElse(null);
 
         if (comment != null) {
@@ -106,7 +106,7 @@ public class CommentsService {
             commentsRepository.save(comment);
         }
     }
-    @CacheEvict(value = "commentCache", key = "#postId")
+    @CacheEvict(value = {"commentCache", "postCache"}, key = "#postId")
     public void deleteComment(String id, String postId,HttpServletRequest request) throws Exception {
         // String username=getuser(request);
         Comment comment = commentsRepository.findById(id).orElse(null);

@@ -54,15 +54,23 @@ public class CommentController {
     }
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity updateComment(@PathVariable String id, @RequestBody CommentRequest updateCommentContent,HttpServletRequest request) throws Exception {
-        commentsService.updateComment(id, updateCommentContent.getContent(),request);
-        return ResponseEntity.status(HttpStatus.OK).body("Comment Updated Successfully");
+    public ResponseEntity updateComment(@PathVariable String id,@PathVariable String postId, @RequestBody CommentRequest updateCommentContent,HttpServletRequest request) throws Exception {
+        try {
+            commentsService.updateComment(id, postId, updateCommentContent.getContent(), request);
+            return ResponseEntity.status(HttpStatus.OK).body("Comment Updated Successfully");
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity deleteComment(@PathVariable String id, @PathVariable String postId,HttpServletRequest request) throws Exception {
-        commentsService.deleteComment(id,postId,request);
-        return ResponseEntity.status(HttpStatus.OK).body("Comment Deleted Successfully");
+        try {
+            commentsService.deleteComment(id, postId, request);
+            return ResponseEntity.status(HttpStatus.OK).body("Comment Deleted Successfully");
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
     @PostMapping("/LikesInc/{id}")
     @ResponseStatus(HttpStatus.OK)

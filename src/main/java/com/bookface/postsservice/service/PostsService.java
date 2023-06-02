@@ -113,7 +113,6 @@ public class PostsService {
                 //Save image to firebase and save image url.
                 try {
                     List<MultipartFile> files = postsRequest.getFiles();
-                    System.out.println(files.size());
                     if(files != null) {
                         for (MultipartFile file : files) {
                             String fileName = IFirebase.save(file);
@@ -162,11 +161,13 @@ public class PostsService {
     }
 
 
-    public List<PostsResponse> getPublishedPostsByAuthorId(String authorId) {
+    public List<PostsResponse> getPublishedPostsByAuthorId(HttpServletRequest request) {
+        String authorId = getuser(request);
         List<Post> publishedPosts = postsRepository.findByAuthorIdAndPublishedTrue(authorId);
         return publishedPosts.stream().map(this::mapToPostResponse).toList();
     }
-    public List<PostsResponse> getDraftedPostsByAuthorId(String authorId) {
+    public List<PostsResponse> getDraftedPostsByAuthorId(HttpServletRequest request) {
+        String authorId = getuser(request);
         List<Post> draftedPosts = postsRepository.findByAuthorIdAndPublishedFalse(authorId);
         return draftedPosts.stream().map(this::mapToPostResponse).toList();
     }
