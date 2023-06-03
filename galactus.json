@@ -1,0 +1,6 @@
+{
+    "name": "content",
+    "port": "8080",
+    "maxInstanceCount": 3,
+    "deps": []
+}

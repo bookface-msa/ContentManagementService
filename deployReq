@@ -1,0 +1,10 @@
+curl \
+    -F file=@target/posts-service-0.0.1-SNAPSHOT.jar \
+    -F propsFile=@production.properties \
+    -F data='{
+        "name": "content",
+        "port": "8080",
+        "maxInstanceCount": 2,
+        "deps": []
+    }' \
+    http://localhost:8080/v1/service/deploy

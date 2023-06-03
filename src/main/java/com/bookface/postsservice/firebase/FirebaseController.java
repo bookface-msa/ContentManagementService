@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/picture")
+@RequestMapping("/content/api/picture")
 public class FirebaseController {
 
     @Autowired

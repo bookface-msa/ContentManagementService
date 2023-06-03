@@ -22,7 +22,7 @@ import java.net.MalformedURLException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/post")
+@RequestMapping("/content/api/post")
 @RequiredArgsConstructor
 @Slf4j
 public class PostsController {
